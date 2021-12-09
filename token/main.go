@@ -37,6 +37,6 @@ func main() {
 		Scopes: []string{"https://graph.microsoft.com/.default"},
 	})
 
-	fmt.Printf("Token : %s\n", token.Token)
+	fmt.Printf("https://jwt.ms/#access_token=%s\n", token.Token)
 	fmt.Printf("You can decode this token on https://jwt.ms/")
 }

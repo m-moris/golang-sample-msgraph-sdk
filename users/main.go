@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	azidentity "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/davecgh/go-spew/spew"
 	a "github.com/microsoft/kiota/authentication/go/azure"
 	msgraphsdk "github.com/microsoftgraph/msgraph-sdk-go"
 	"github.com/microsoftgraph/msgraph-sdk-go/models/microsoft/graph"
@@ -47,17 +49,17 @@ func main() {
 	client := msgraphsdk.NewGraphServiceClient(adapter)
 
 	// Change your identity.
-	getUser(client, "0d53a50b-0492-4648-9ac9-71dd2953c938")
-	getUser(client, "0f9276c6-d8e4-43f0-848a-f0ec9cda73bb")
+	//getUser(client, "5fb24546-73b4-437e-acb9-1a5f0975ba8e")
+	getUser(client, "e2a12752-ca9e-44ae-bbea-6384c25f58e6")
 	listUser(client)
-
 }
 
 func getUser(client *msgraphsdk.GraphServiceClient, id string) {
 
 	options := &ui.UserRequestBuilderGetOptions{
 		Q: &ui.UserRequestBuilderGetQueryParameters{
-			Select: []string{"createdDateTime"},
+			Expand: []string{"extensions($filter=id eq 'com.example.moris')"},
+			Select: []string{"id", "createdDateTime", "accountEnabled", "displayName", "userPrincipalName"},
 		},
 	}
 
@@ -92,16 +94,28 @@ func listUser(client *msgraphsdk.GraphServiceClient) {
 }
 
 func printUser(user graph.User) {
+
+	spew.Dump(user)
+
 	fmt.Printf("------------------------------------------------------------------------------------\n")
 	fmt.Printf("user.GetId(): %v\n", p(user.GetId()))
+	fmt.Printf("user.GetUserPrincipalName(): %v\n", p(user.GetUserPrincipalName()))
+
 	fmt.Printf("user.GetDisplayName(): %v\n", p(user.GetDisplayName()))
 	fmt.Printf("user.GetSurname(): %v\n", p(user.GetSurname()))
 	fmt.Printf("user.GetGivenName(): %v\n", p(user.GetGivenName()))
+
 	fmt.Printf("user.GetMail(): %v\n", p(user.GetMail()))
-	fmt.Printf("user.GetUserPrincipalName(): %v\n", p(user.GetUserPrincipalName()))
 	fmt.Printf("user.GetCompanyName(): %v\n", p(user.GetCompanyName()))
 	fmt.Printf("user.GetCreatedDateTime(): %v\n", user.GetCreatedDateTime())
 	fmt.Printf("user.GetAdditionalData(): %v\n", user.GetAdditionalData())
+
+	for _, e := range user.GetExtensions() {
+		for k, v := range e.GetAdditionalData() {
+			fmt.Printf("k: %v\n", k)
+			fmt.Printf("v: %v\n", r(v))
+		}
+	}
 }
 
 func p(p *string) string {
@@ -110,4 +124,8 @@ func p(p *string) string {
 	} else {
 		return *p
 	}
+}
+
+func r(value interface{}) interface{} {
+	return reflect.Indirect(reflect.ValueOf(value)).Interface()
 }
